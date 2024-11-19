@@ -21,7 +21,7 @@ class LexError:
         return False
     
     def report(self) -> None:
-        print("\033[91mErro lexico:\033[0m")
+        print("\033[91mErro na analise lexica:\033[0m")
         print("Linha " + str(self.linha))
         
         match self.tipo:
@@ -29,9 +29,9 @@ class LexError:
                 print("Uma string foi aberta, mas nao foi fechada.")
                 
             case LexErrorType.E_INESPERADO:
-                print("Eu nao esperava encontrar '&' aqui, voce quis dizer &&?")
+                print("Eu nao esperava encontrar & aqui, voce quis dizer &&?")
             case LexErrorType.OU_INESPERADO:
-                print("Eu nao esperava encontrar '|' aqui, voce quis dizer ||?")
+                print("Eu nao esperava encontrar | aqui, voce quis dizer ||?")
                 
             case LexErrorType.NUMERO_MAL_FORMADO:
                 assert self.lexema is not None
