@@ -14,7 +14,7 @@ ola
 "string"
 123
 123.5
-bang miss cavalgando XERIFE PROCURADO VoRtA DESERTO mocinho bandido atire
+bang miss cavalgando xerife procurado vorta deserto mocinho bandido atire BANG Miss
 &
 |
 @
@@ -59,13 +59,15 @@ interminada
                 Token(TokenType.BANG, "bang", 9),
                 Token(TokenType.MISS, "miss", 9),
                 Token(TokenType.CAVALGANDO, "cavalgando", 9),
-                Token(TokenType.XERIFE, "XERIFE", 9),
-                Token(TokenType.PROCURADO, "PROCURADO", 9),
-                Token(TokenType.VORTA, "VoRtA", 9),
-                Token(TokenType.DESERTO, "DESERTO", 9),
+                Token(TokenType.XERIFE, "xerife", 9),
+                Token(TokenType.PROCURADO, "procurado", 9),
+                Token(TokenType.VORTA, "vorta", 9),
+                Token(TokenType.DESERTO, "deserto", 9),
                 Token(TokenType.MOCINHO, "mocinho", 9),
                 Token(TokenType.BANDIDO, "bandido", 9),
                 Token(TokenType.ATIRE, "atire", 9),
+                Token(TokenType.IDENTIFICADOR, "BANG", 9),
+                Token(TokenType.IDENTIFICADOR, "Miss", 9),
                 Token(TokenType.EOF, "", 16),
             ]
         )

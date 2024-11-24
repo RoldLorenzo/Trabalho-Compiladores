@@ -185,7 +185,7 @@ class Lexer:
         while self.peek().isalnum():
             self.avanca()
         
-        lexema = self.source[self.inicio : self.posicao].lower()
+        lexema = self.source[self.inicio : self.posicao]
         
         # Verifica se eh uma palavra reservada.
         tipo_token = (PALAVRAS_RESERVADAS[lexema] 
