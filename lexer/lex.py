@@ -167,7 +167,7 @@ class Lexer:
         
         return True
     
-    def is_whitespace(self, string) -> bool:
+    def is_whitespace(self, string: str) -> bool:
         return (
             string == " " or
             string == "\n" or
@@ -176,7 +176,7 @@ class Lexer:
         )
     
     def consome_seq_caracteres(self) -> None:
-        while not self.is_whitespace(self.peek()):
+        while not self.fim_codigo() and not self.is_whitespace(self.peek()):
             self.avanca()
     
     # Consome um identificador ou palavra reservada e
