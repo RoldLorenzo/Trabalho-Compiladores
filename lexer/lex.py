@@ -144,6 +144,10 @@ class Lexer:
         
         self.add_token(TokenType.INT)
     
+    # Verifica se um numero eh valido.
+    # O numero eh valido se eh uma sequencia de digitos,
+    # ou uma sequencia de digitos com exatamente um ponto no meio.
+    # O numero nao pode acabar com um ponto ou ter outros caracteres.
     def valida_num(self) -> bool:
         i = self.posicao
         encontrou_ponto = False
@@ -175,6 +179,8 @@ class Lexer:
             string == "\t"
         )
     
+    # Consome caracteres do codigo-fonte ate encontrar um espaco,
+    # quebra de linha ou fim do codigo.
     def consome_seq_caracteres(self) -> None:
         while not self.fim_codigo() and not self.is_whitespace(self.peek()):
             self.avanca()
@@ -200,7 +206,7 @@ class Lexer:
         while self.peek().isdigit():
             self.avanca()
 
-    # Adiciona um caracter na lista de tokens.
+    # Adiciona um token na lista de tokens.
     # Caso lexema seja None, o lexema do token sera
     # cortado do codigo-fonte entre self.inicio e self.posicao
     def add_token(self, tipo: TokenType, lexema: Optional[str] = None) -> None:        
@@ -234,7 +240,7 @@ class Lexer:
 
     # Verifica se o proximo caracter eh o esperado,
     # se for, o consome e retorna True.
-    # Retorna False caso contrario.
+    # Caso contrario, retorna False e nao o consome.
     def match(self, esperado: str) -> bool:
         if self.fim_codigo() or self.peek() != esperado:
             return False
@@ -242,7 +248,7 @@ class Lexer:
         self.posicao += 1
         return True
 
-    # Consome caracteres ate uma quebra de linha ou fim do codigo.
+    # Consome caracteres ate que a linha acabe.
     def ignora_linha(self) -> None:
         while self.peek() != '\n' and not self.fim_codigo():
             self.avanca()

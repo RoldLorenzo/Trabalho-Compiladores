@@ -20,6 +20,7 @@ class LexError:
         
         return False
     
+    # Printa uma mensagem customizada a partir do tipo do erro
     def report(self) -> None:
         print("\033[91mErro na analise lexica:\033[0m")
         print("Linha " + str(self.linha))
