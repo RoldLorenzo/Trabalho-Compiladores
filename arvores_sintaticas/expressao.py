@@ -1,6 +1,8 @@
 from __future__ import annotations
 from lexer.lex_token import Token
 
+# Crafting Interpreters, Robert Nystrom - Cap. 5.
+
 tipo_literal = int | float | str | bool | None
 
 class Expressao:
