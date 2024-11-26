@@ -8,7 +8,7 @@ class LexTests(unittest.TestCase):
     def teste_lex(self):
         fonte = r"""
 // comentario
-([{}]),.-+*;/
+([{}]),-+*;/
 ! != = == > >= < <= && ||
 ola
 "string"
@@ -18,7 +18,8 @@ bang miss cavalgando xerife procurado vorta deserto mocinho bandido atire BANG M
 &
 |
 @
-@abcdfdkjf
+.abcdfdkjf
+123.4.5
 "string
 interminada
         """
@@ -36,7 +37,6 @@ interminada
                 Token(TokenType.FECHA_COLCHETE, "]", 3),
                 Token(TokenType.FECHA_PARENTESES, ")", 3),
                 Token(TokenType.VIRGULA, ",", 3),
-                Token(TokenType.PONTO, ".", 3),
                 Token(TokenType.MENOS, "-", 3),
                 Token(TokenType.MAIS, "+", 3),
                 Token(TokenType.ASTERISCO, "*", 3),
@@ -68,7 +68,8 @@ interminada
                 Token(TokenType.ATIRE, "atire", 9),
                 Token(TokenType.IDENTIFICADOR, "BANG", 9),
                 Token(TokenType.IDENTIFICADOR, "Miss", 9),
-                Token(TokenType.EOF, "", 16),
+                Token(TokenType.FLOAT, "123.4", 14),
+                Token(TokenType.EOF, "", 17),
             ]
         )
         
@@ -78,29 +79,8 @@ interminada
                 LexError(LexErrorType.E_INESPERADO, None, 10),
                 LexError(LexErrorType.OU_INESPERADO, None, 11),
                 LexError(LexErrorType.TOKEN_INESPERADO, "@", 12),
-                LexError(LexErrorType.TOKEN_INESPERADO, "@abcdfdkjf", 13),
-                LexError(LexErrorType.STRING_INTERMINADA, None, 14),
+                LexError(LexErrorType.TOKEN_INESPERADO, ".abcdfdkjf", 13),
+                LexError(LexErrorType.TOKEN_INESPERADO, ".5", 14),
+                LexError(LexErrorType.STRING_INTERMINADA, None, 15),
             ]
         )
-    
-    def teste_numeros_mal_formados(self):
-        fonte = r"""
-1a
-123.5a
-12@3.5
-123.4.5
-123.
-        """
-        
-        lexer = Lexer(fonte)
-        lexer.lex()
-        
-        self.assertEqual(lexer.tokens, [Token(TokenType.EOF, "", 7)])
-        
-        self.assertEqual(lexer.erros, [
-            LexError(LexErrorType.NUMERO_MAL_FORMADO, "1a", 2),
-            LexError(LexErrorType.NUMERO_MAL_FORMADO, "123.5a", 3),
-            LexError(LexErrorType.NUMERO_MAL_FORMADO, "12@3.5", 4),
-            LexError(LexErrorType.NUMERO_MAL_FORMADO, "123.4.5", 5),
-            LexError(LexErrorType.NUMERO_MAL_FORMADO, "123.", 6),
-        ])

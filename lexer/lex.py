@@ -42,8 +42,6 @@ class Lexer:
                 self.add_token(TokenType.FECHA_CHAVE)
             case ',':
                 self.add_token(TokenType.VIRGULA)
-            case '.':
-                self.add_token(TokenType.PONTO)
             case '-':
                 self.add_token(TokenType.MENOS)
             case '+':
@@ -126,10 +124,7 @@ class Lexer:
     # Exemplos:
     # "123" -> Token(INT, "123", linha = 1)
     # "123.5" -> Token(FLOAT, "123.5", linha = 1)
-    def lex_numero(self) -> None:
-        if not self.valida_num():
-            return
-        
+    def lex_numero(self) -> None:  
         self.consome_seq_digitos()
             
         if self.peek() == '.' and self.peekNext().isdigit():
@@ -143,33 +138,6 @@ class Lexer:
             return
         
         self.add_token(TokenType.INT)
-    
-    # Verifica se um numero eh valido.
-    # O numero eh valido se eh uma sequencia de digitos,
-    # ou uma sequencia de digitos com exatamente um ponto no meio.
-    # O numero nao pode acabar com um ponto ou ter outros caracteres.
-    def valida_num(self) -> bool:
-        i = self.posicao
-        encontrou_ponto = False
-        
-        while self.source[i].isdigit() or self.source[i] == '.':
-            if self.source[i] == '.':
-                if not encontrou_ponto and self.source[i + 1].isdigit():
-                    encontrou_ponto = True
-                else:
-                    break
-    
-            i += 1
-            
-        if not self.is_whitespace(self.source[i]):
-            self.posicao = i
-            
-            self.consome_seq_caracteres()
-                
-            self.add_error(LexErrorType.NUMERO_MAL_FORMADO, self.source[self.inicio : self.posicao])
-            return False
-        
-        return True
     
     def is_whitespace(self, string: str) -> bool:
         return (
