@@ -1,4 +1,5 @@
-from lexer.lex import Lexer
+from lexer.lex import *
+from arvores_sintaticas.expressao import *
 
 def le_arq_entrada(nome_arq: str) -> str:
     try:
@@ -12,13 +13,10 @@ def le_arq_entrada(nome_arq: str) -> str:
         exit(1) 
 
 if __name__ == '__main__':
-    """ fonte = le_arq_entrada("teste.txt")
+    expr = Binaria(
+        Unaria(Token(TokenType.MENOS, "-", 1), Literal(123)),
+        Token(TokenType.ASTERISCO, "*", 1),
+        Agrupamento(Literal(45.67))
+    )
     
-    lexer = Lexer(fonte)
-    lexer.lex()
-    
-    if len(lexer.erros) > 0:
-        for e in lexer.erros:
-            e.report()
-            
-        exit(1) """
+    print(expr.to_str())
