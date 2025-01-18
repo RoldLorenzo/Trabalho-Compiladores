@@ -6,7 +6,7 @@ from arvores_sintaticas.expressao import *
 from .parser_error import ParserError
 from typing import NoReturn
 
-# Crafting Interpreters, Robert Nystrom - Cap. 6.
+# Crafting Interpreters, Robert Nystrom - Caps. 6 - 8.
 
 class Parser:
     def __init__(self, tokens: list[Token]) -> None:
