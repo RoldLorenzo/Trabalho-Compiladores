@@ -9,7 +9,7 @@ class Lexer:
     def __init__(self, source: str) -> None:
         self.source = source
         self.tokens: list[Token] = []
-        self.erros: list[LexError] = []
+        self.ocorreu_erro: bool = False
         self.linha = 1
         self.posicao = 0
         self.inicio = 0
@@ -19,6 +19,9 @@ class Lexer:
         while not self.fim_codigo():
             self.inicio = self.posicao
             self.lex_token()
+
+        if self.ocorreu_erro:
+            exit(1)
 
         self.tokens.append(Token(TokenType.EOF, "", self.linha))
 
@@ -187,7 +190,10 @@ class Lexer:
         if linha is None:
             linha = self.linha
                         
-        self.erros.append(LexError(tipo, lexema, linha))
+        erro = LexError(tipo, lexema, linha)
+        erro.report()
+        
+        self.ocorreu_erro = True
 
     # Consome um caracter do codigo-fonte e o retorna.
     def avanca(self) -> str:

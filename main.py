@@ -18,13 +18,7 @@ if __name__ == '__main__':
     lexer = Lexer(entrada)
     lexer.lex()
     
-    if len(lexer.erros) > 0:
-        for e in lexer.erros:
-            e.report()
-            
-        exit(1)
-        
     parser = Parser(lexer.tokens)
-    expr = parser.parse()
-    
-    print(expr.to_str())
+    parser.parse()
+        
+    print(parser.declaracoes)

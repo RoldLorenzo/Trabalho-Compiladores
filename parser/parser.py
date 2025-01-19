@@ -3,8 +3,9 @@ from lexer.lex_token import (
     TokenType
 )
 from arvores_sintaticas.expressao import *
+from arvores_sintaticas.declaracao import *
 from .parser_error import ParserError
-from typing import NoReturn
+from typing import Optional, NoReturn
 
 # Crafting Interpreters, Robert Nystrom - Caps. 6 - 8.
 
@@ -12,12 +13,141 @@ class Parser:
     def __init__(self, tokens: list[Token]) -> None:
         self.tokens = tokens
         self.posicao: int = 0
+        self.ocorreu_erro = False
+        self.declaracoes: list[Declaracao] = []
     
-    def parse(self) -> Expressao:
-        return self.expressao()
+    def parse(self) -> None:
+        while not self.fim_tokens():
+            declaracao = self.declaracao()
+            
+            if declaracao is not None:
+                self.declaracoes.append(declaracao)
+                
+        if self.ocorreu_erro:
+            exit(1)
+    
+    def declaracao(self) -> Optional[Declaracao]:
+        try:
+            if self.match(TokenType.XERIFE): return self.declaracao_variavel()
+            
+            return self.statement()
+        except ParserError as e:
+            e.report()
+            
+            self.sincroniza()
+            return None
+    
+    def declaracao_variavel(self) -> Declaracao:
+        nome: Token = self.espera(TokenType.IDENTIFICADOR, "Eu esperava um nome aqui.")
+        
+        inicializador: Optional[Expressao] = None
+        
+        if self.match(TokenType.IGUAL):
+            inicializador = self.expressao()
+            
+        self.espera(TokenType.PONTO_VIRGULA, "Eu esperava encontrar ';' depois da declaracao da variavel.")
+        return Var(nome, inicializador)
+    
+    def statement(self) -> Declaracao:
+        if self.match(TokenType.BANG):
+            return self.statement_if()
+        
+        if self.match(TokenType.CAVALGANDO):
+            return self.statement_while()
+        
+        if self.match(TokenType.ATIRE):
+            return self.statement_print()
+        
+        if self.match(TokenType.ABRE_CHAVE):
+            return Bloco(self.bloco())
+        
+        return self.statement_expressao()
+    
+    def statement_if(self) -> Declaracao:
+        self.espera(TokenType.ABRE_PARENTESES, "Eu esperava '(' apos um if.")
+        condicao: Expressao = self.expressao()
+        self.espera(TokenType.FECHA_PARENTESES, "Eu esperava ')' apos uma condicao.")
+        
+        then_branch: Declaracao = self.statement()
+        else_branch: Optional[Declaracao] = None
+        
+        if self.match(TokenType.MISS):
+            else_branch = self.statement()
+            
+        return If(condicao, then_branch, else_branch)
+    
+    def statement_while(self) -> Declaracao:
+        self.espera(TokenType.ABRE_PARENTESES, "Eu esperava '(' apos um while.")
+        condicao: Expressao = self.expressao()
+        self.espera(TokenType.FECHA_PARENTESES, "Eu esperava ')' apos uma condicao.")
+        
+        corpo: Declaracao = self.declaracao()
+        
+        return While(condicao, corpo)
+    
+    def statement_print(self) -> Declaracao:
+        valor: Expressao = self.expressao()
+        
+        self.espera(TokenType.PONTO_VIRGULA, "Eu esperava encontrar ';' depois do valor.")
+        
+        return Print(valor)
+    
+    def bloco(self) -> list[Declaracao]:
+        declaracoes = []
+        
+        while not self.check(TokenType.FECHA_CHAVE) and not self.fim_tokens():
+            declaracao = self.declaracao()
+            
+            if declaracao is not None:
+                declaracoes.append(declaracao)
+                
+        self.espera(TokenType.FECHA_CHAVE, "Eu esperava '}' aqui.")
+        return declaracoes
+        
+    def statement_expressao(self) -> Declaracao:
+        expressao: Expressao = self.expressao()
+        
+        self.espera(TokenType.PONTO_VIRGULA, "Eu esperava encontrar ';' depois dessa expressao.")
+        
+        return Expr(expressao)
     
     def expressao(self) -> Expressao:
-        return self.igualdade()
+        return self.atribuicao()
+    
+    def atribuicao(self) -> Expressao:
+        expressao: Expressao = self.ou()
+        
+        if self.match(TokenType.IGUAL):
+            igual: Token = self.anterior()
+            valor: Expressao = self.atribuicao()
+            
+            if isinstance(expressao, Variavel):
+                nome: Token = expressao.nome
+                return Atribuicao(nome, valor)
+            
+            self.erro("Isso nao e uma atribuicao valida.", igual)
+            
+        return expressao
+    
+    def ou(self) -> Expressao:
+        expressao: Expressao = self.e()
+        
+        while self.match(TokenType.OR):
+            operador: Token = self.anterior()
+            direita: Expressao = self.e()
+            expressao = Logica(expressao, operador, direita)
+            
+        return expressao
+    
+    def e(self) -> Expressao:
+        expressao: Expressao = self.igualdade()
+        
+        while self.match(TokenType.AND):
+            operador: Token = self.anterior()
+            direita: Expressao = self.igualdade()
+            expressao = Logica(expressao, operador, direita)
+            
+        return expressao
     
     def igualdade(self) -> Expressao:
         expressao = self.comparacao()
@@ -89,6 +219,9 @@ class Parser:
         if self.match(TokenType.FLOAT): 
             return Literal(float(self.anterior().lexema))
         
+        if self.match(TokenType.IDENTIFICADOR):
+            return Variavel(self.anterior())
+        
         if self.match(TokenType.ABRE_PARENTESES):
             expressao = self.expressao()
             self.espera(TokenType.FECHA_PARENTESES, "Esperado ')' apos essa expressao")
@@ -96,15 +229,13 @@ class Parser:
         
         self.erro("Eu esperava uma expressao aqui")
         
-    def erro(self, mensagem: str) -> NoReturn:
-        erro = ParserError(self.peek())
-        print(erro.report(mensagem))
-        exit(1)
-    
-    def espera(self, tipo: TokenType, mensagem: str) -> Token:
-        if self.check(tipo): return self.avanca()
+    def erro(self, mensagem: str, token: Optional[Token] = None) -> NoReturn:
+        self.ocorreu_erro = True
         
-        self.erro(mensagem)
+        if token is None:
+            token = self.peek()
+                
+        raise ParserError(token, mensagem)
     
     def sincroniza(self) -> None:
         self.avanca()
@@ -128,6 +259,13 @@ class Parser:
                 return
             
             self.avanca()
+    
+    # Retorna o proximo token caso ele seja do tipo esperado.
+    # Adiciona um erro com a mensagem passada por parametro caso contrario.
+    def espera(self, tipo: TokenType, mensagem: str) -> Token:
+        if self.check(tipo): return self.avanca()
+        
+        self.erro(mensagem)
     
     # Retorna True se o proximo token na lista eh de algum dos tipos passados como parametro.
     # Retorna False caso contrario
