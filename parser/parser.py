@@ -308,15 +308,15 @@ class Parser:
         return Chamada(chamado, paren, argumentos)
     
     def primaria(self) -> Expressao:
-        if self.match(TokenType.BANDIDO): return Literal(False)
-        if self.match(TokenType.MOCINHO): return Literal(True)
-        if self.match(TokenType.DESERTO): return Literal(None)
-        if self.match(TokenType.STRING): return Literal(self.anterior().lexema)
+        if self.match(TokenType.BANDIDO): return Literal(False, TokenType.BANDIDO)
+        if self.match(TokenType.MOCINHO): return Literal(True, TokenType.MOCINHO)
+        if self.match(TokenType.DESERTO): return Literal(None, TokenType.DESERTO)
+        if self.match(TokenType.STRING): return Literal(self.anterior().lexema, TokenType.STRING)
         
         if self.match(TokenType.INT): 
-            return Literal(int(self.anterior().lexema))
+            return Literal(int(self.anterior().lexema), TokenType.INT)
         if self.match(TokenType.FLOAT): 
-            return Literal(float(self.anterior().lexema))
+            return Literal(float(self.anterior().lexema), TokenType.FLOAT)
         
         if self.match(TokenType.IDENTIFICADOR):
             return Variavel(self.anterior())
@@ -325,6 +325,20 @@ class Parser:
             expressao = self.expressao()
             self.espera(TokenType.FECHA_PARENTESES, "Esperado ')' apos essa expressao")
             return Agrupamento(expressao)
+        
+        if self.match(TokenType.ABRE_COLCHETE):
+            elementos = []
+            
+            if not self.check(TokenType.FECHA_COLCHETE):
+                while True:
+                    elementos.append(self.expressao())
+                    
+                    if not self.match(TokenType.VIRGULA):
+                        break
+        
+            self.espera(TokenType.FECHA_COLCHETE, "Eu esperava ']' depois de uma lista.")
+            
+            return Lista(elementos)
         
         self.erro("Eu esperava uma expressao aqui")
         

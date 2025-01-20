@@ -11,6 +11,7 @@ class TipoPrimitivo(Enum):
     FLOAT = auto()
     STRING = auto()
     BOOL = auto()
+    NULL = auto()
     
 @dataclass
 class TipoLista:

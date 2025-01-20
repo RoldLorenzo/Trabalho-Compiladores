@@ -1,5 +1,6 @@
 from lexer.lex import Lexer
 from parser.parser import Parser
+from analise_semantica.validator import AnaliseSemantica
 
 def le_arq_entrada(nome_arq: str) -> str:
     try:
@@ -21,8 +22,7 @@ if __name__ == '__main__':
     parser = Parser(lexer.tokens)
     parser.parse()
         
-    print("Lista de declaracoes: ")
-    for decl in parser.declaracoes:
-        print(decl)
-        print()
-    print("---------")
+    analisador = AnaliseSemantica()
+    analisador.analisar(parser.declaracoes)
+    print(parser.declaracoes)
+    print(analisador.tabela_simbolos)
