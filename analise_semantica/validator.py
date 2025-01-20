@@ -30,12 +30,12 @@ class AnaliseSemantica:
 
     def analisar(self, declaracoes: list[Declaracao]):
         for declaracao in declaracoes:
-            try:
-                self.visitar_declaracao(declaracao)
-            except Exception as e:
+            #try:
+            self.visitar_declaracao(declaracao)
+            """ except Exception as e:
                 print("\033[91mErro na analise semantica:\033[0m")
                 print(e)
-                exit(1)
+                exit(1) """
 
     def visitar_declaracao(self, declaracao: Declaracao):
         if isinstance(declaracao, Var):
@@ -102,7 +102,9 @@ class AnaliseSemantica:
         tipo_condicao = self.visitar_expressao(while_stmt.condicao)
         if tipo_condicao != TipoPrimitivo.BOOL:
             raise Exception("Erro: A condição de um 'while' deve ser do tipo BOOL.")
-        self.visitar_declaracao(while_stmt.corpo)
+        
+        if while_stmt.corpo is not None:
+            self.visitar_declaracao(while_stmt.corpo)
 
     def visitar_return(self, retorno: Return):
         assert self.tipo_retorno_atual is not None
@@ -181,12 +183,27 @@ class AnaliseSemantica:
         if binaria.operador.tipo in {TokenType.MAIS, TokenType.MENOS, TokenType.ASTERISCO, TokenType.BARRA}:
             if tipo_esquerda not in {TipoPrimitivo.INT, TipoPrimitivo.FLOAT}:
                 raise Exception(f"Erro: Operação inválida para tipo {tipo_esquerda}.")
-            return tipo_esquerda
+            return TipoPrimitivo.FLOAT
         
         # Operações lógicas retornam BOOL
-        if binaria.operador.tipo in {TokenType.AND, TokenType.OR}:
+        if binaria.operador.tipo in {
+                TokenType.AND,
+                TokenType.OR,
+            }:
             if tipo_esquerda != TipoPrimitivo.BOOL:
                 raise Exception("Erro: Operação lógica requer operandos do tipo BOOL.")
+            return TipoPrimitivo.BOOL
+        
+        if binaria.operador.tipo in {
+            TokenType.MENOR,
+            TokenType.MENOR_IGUAL,
+            TokenType.MAIOR, 
+            TokenType.MAIOR_IGUAL, 
+            TokenType.DIFERENTE, 
+            TokenType.IGUAL_IGUAL
+        }: 
+            if tipo_esquerda != TipoPrimitivo.INT and tipo_esquerda != TipoPrimitivo.FLOAT:
+                raise Exception("Erro: Comparacoes requerem operandos numericos.")
             return TipoPrimitivo.BOOL
         
         raise Exception(f"Operador binário desconhecido: {binaria.operador.tipo}")
@@ -201,7 +218,7 @@ class AnaliseSemantica:
             return tipo_direita
         
         # Exemplo: operador '!' só é válido para BOOL
-        if unaria.operador.tipo == TokenType.BANG:
+        if unaria.operador.tipo == TokenType.EXCLAMACAO:
             if tipo_direita != TipoPrimitivo.BOOL:
                 raise Exception(f"Erro: Operador '!' inválido para tipo {tipo_direita}.")
             return TipoPrimitivo.BOOL
@@ -224,7 +241,10 @@ class AnaliseSemantica:
         primeiro_tipo = tipos_elementos[0] if tipos_elementos else TipoPrimitivo.NULL
         for tipo in tipos_elementos:
             if tipo != primeiro_tipo:
-                raise Exception("Erro: Lista contém elementos de tipos diferentes.")
+                raise Exception("Erro: Lista contem elementos de tipos diferentes.")
+        
+        if isinstance(primeiro_tipo, TipoLista):
+            raise Exception("Erro: Listas encadeadas nao sao permitidas.")
         
         return TipoLista(primeiro_tipo)
 
@@ -233,7 +253,7 @@ class AnaliseSemantica:
 
     def visitar_atribuicao(self, atribuicao: Atribuicao) -> Tipo:
         tipo_valor = self.visitar_expressao(atribuicao.valor)
-        tipo_variavel = self.visitar_variavel(atribuicao.nome)
+        tipo_variavel = self.visitar_variavel(self.tabela_simbolos.buscar(atribuicao.nome))
         
         if tipo_valor != tipo_variavel:
             raise Exception(f"Erro: Atribuição incompatível. Esperado: {tipo_variavel}, encontrado: {tipo_valor}.")
@@ -243,9 +263,6 @@ class AnaliseSemantica:
     def visitar_chamada(self, chamada: Chamada) -> Tipo:
         tipo_funcao = self.visitar_expressao(chamada.chamado)
         
-        # Verifique se o tipo da função é válido (exemplo: use uma tabela de tipos de funções)
-        if not isinstance(tipo_funcao, Tipo):
-            raise Exception(f"Erro: Tentativa de chamada em algo que não é função.")
+        # aqui, deveriam ser validados o numero e tipo dos argumentos, se a funcao existe...
         
-        # Opcional: valide os argumentos com os parâmetros esperados
         return tipo_funcao
