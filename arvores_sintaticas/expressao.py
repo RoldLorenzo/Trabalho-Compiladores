@@ -25,6 +25,9 @@ class Atribuicao(Expressao):
     def __init__(self, nome: Token, valor: Expressao) -> None:
         self.nome = nome
         self.valor = valor
+        
+    def to_str(self):
+        return self.coloca_parenteses("atribuicao " + self.nome.lexema, self.valor)
 
 class Binaria(Expressao):
     def __init__(self, esquerda: Expressao, operador: Token, direita: Expressao) -> None:
@@ -64,6 +67,9 @@ class Chamada(Expressao):
         self.chamado = chamado
         self.paren = paren
         self.argumentos = argumentos
+        
+    def to_str(self):
+        return self.coloca_parenteses("chamada", self.chamado)
 
 class Agrupamento(Expressao):
     def __init__(self, expressao: Expressao) -> None:
@@ -75,3 +81,6 @@ class Agrupamento(Expressao):
 class Variavel(Expressao):
     def __init__(self, nome: Token) -> None:
         self.nome = nome
+        
+    def to_str(self):
+        return self.nome.lexema

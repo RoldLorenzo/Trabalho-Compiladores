@@ -21,4 +21,8 @@ if __name__ == '__main__':
     parser = Parser(lexer.tokens)
     parser.parse()
         
-    print(parser.declaracoes)
+    print("Lista de declaracoes: ")
+    for decl in parser.declaracoes:
+        print(decl)
+        print()
+    print("---------")
