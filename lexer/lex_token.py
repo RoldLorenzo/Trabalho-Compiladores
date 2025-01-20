@@ -16,6 +16,7 @@ class TokenType(Enum):
     ASTERISCO = auto()
     PONTO_VIRGULA = auto()
     BARRA = auto()
+    DOIS_PONTOS = auto()
 
     # Tokens que podem ter mais de um caracter
     EXCLAMACAO = auto()
@@ -34,6 +35,8 @@ class TokenType(Enum):
     STRING = auto()
     INT = auto()
     FLOAT = auto()
+    BOOL = auto()
+    LISTA = auto()
 
     # Palavras reservadas
     BANG = auto() # if
@@ -61,6 +64,11 @@ PALAVRAS_RESERVADAS = {
     'mocinho': TokenType.MOCINHO,
     'bandido': TokenType.BANDIDO,
     'atire': TokenType.ATIRE,
+    'int': TokenType.INT,
+    'float': TokenType.FLOAT,
+    'lista': TokenType.LISTA,
+    'string': TokenType.STRING,
+    'bool': TokenType.BOOL
 }
 
 @dataclass(repr=True, eq=True)

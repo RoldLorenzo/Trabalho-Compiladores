@@ -7,7 +7,7 @@ from arvores_sintaticas.declaracao import *
 from .parser_error import ParserError
 from typing import Optional, NoReturn
 
-# Crafting Interpreters, Robert Nystrom - Caps. 6 - 8.
+# Crafting Interpreters, Robert Nystrom - Caps. 6 - 10.
 
 class Parser:
     def __init__(self, tokens: list[Token]) -> None:
@@ -28,6 +28,7 @@ class Parser:
     
     def declaracao(self) -> Optional[Declaracao]:
         try:
+            if self.match(TokenType.PROCURADO): return self.declaracao_funcao()
             if self.match(TokenType.XERIFE): return self.declaracao_variavel()
             
             return self.statement()
@@ -37,8 +38,41 @@ class Parser:
             self.sincroniza()
             return None
     
+    def declaracao_funcao(self) -> Declaracao:
+        nome: Token = self.espera(TokenType.IDENTIFICADOR, "Eu esperava encontrar um nome.")
+        self.espera(TokenType.ABRE_PARENTESES, "Eu esperava '(' depois de um nome de funcao.")
+        
+        params: list[Parametro] = []
+        
+        if not self.check(TokenType.FECHA_PARENTESES):
+            while True:
+                token_param = self.espera(TokenType.IDENTIFICADOR, "Eu esperava o nome de um parametro.")
+                self.espera(TokenType.DOIS_PONTOS, "Eu esperava ':' depois de um parametro.")
+                tipo_param = self.tipo()
+                
+                params.append(Parametro(token_param, tipo_param))
+                
+                if not self.match(TokenType.VIRGULA):
+                    break
+        
+        self.espera(TokenType.FECHA_PARENTESES, "Eu esperava ')' depois dos parametros de uma funcao.")
+        
+        self.espera(TokenType.DOIS_PONTOS, "Eu esperava ':' depois de uma funcao.")
+        
+        tipo_retorno = self.tipo()
+        
+        self.espera(TokenType.ABRE_CHAVE, "Eu esperava '{' antes do corpo de uma funcao.")
+        
+        corpo: list[Declaracao] = self.bloco()
+        
+        return Funcao(nome, params, corpo, tipo_retorno)
+    
     def declaracao_variavel(self) -> Declaracao:
         nome: Token = self.espera(TokenType.IDENTIFICADOR, "Eu esperava um nome aqui.")
+        
+        self.espera(TokenType.DOIS_PONTOS, "Eu esperava encontrar ':' depois de um nome de variavel.")
+        
+        tipo = self.tipo()
         
         inicializador: Optional[Expressao] = None
         
@@ -46,7 +80,36 @@ class Parser:
             inicializador = self.expressao()
             
         self.espera(TokenType.PONTO_VIRGULA, "Eu esperava encontrar ';' depois da declaracao da variavel.")
-        return Var(nome, inicializador)
+        
+        return Var(nome, inicializador, tipo)
+    
+    def tipo(self) -> Tipo:
+        if self.match(TokenType.LISTA):
+            self.espera(TokenType.ABRE_COLCHETE, "Eu esperava encontrar '[' depois do tipo lista.")
+            interno = self.tipo_primitivo()
+            self.espera(TokenType.FECHA_COLCHETE, "Eu esperava encontrar ']' aqui.")
+            
+            return TipoLista(interno)
+        
+        return self.tipo_primitivo()
+    
+    def tipo_primitivo(self) -> TipoPrimitivo:
+        if self.match(TokenType.INT):
+            return TipoPrimitivo.INT
+        
+        if self.match(TokenType.FLOAT):
+            return TipoPrimitivo.FLOAT
+        
+        if self.match(TokenType.STRING):
+            return TipoPrimitivo.STRING
+        
+        if self.match(TokenType.BOOL):
+            return TipoPrimitivo.BOOL
+        
+        if self.match(TokenType.LISTA):
+            self.erro("Eu esperava um tipo primitivo, listas aninhadas nao sao permitidas.")
+        
+        self.erro("Eu esperava encontrar um tipo aqui.")
     
     def statement(self) -> Declaracao:
         if self.match(TokenType.BANG):
@@ -55,6 +118,9 @@ class Parser:
         if self.match(TokenType.CAVALGANDO):
             return self.statement_while()
         
+        if self.match(TokenType.VORTA):
+            return self.statement_return()
+        
         if self.match(TokenType.ATIRE):
             return self.statement_print()
         
@@ -62,6 +128,17 @@ class Parser:
             return Bloco(self.bloco())
         
         return self.statement_expressao()
+    
+    def statement_return(self) -> Declaracao:
+        # Salvamos o token return para poder usar a linha em que ele esta para imprimir erros.
+        token: Token = self.anterior()
+        
+        valor: Optional[Expressao] = None
+        if not self.check(TokenType.PONTO_VIRGULA):
+            valor = self.expressao()
+            
+        self.espera(TokenType.PONTO_VIRGULA, "Eu esperava ';' aqui")
+        return Return(token, valor)
     
     def statement_if(self) -> Declaracao:
         self.espera(TokenType.ABRE_PARENTESES, "Eu esperava '(' apos um if.")
@@ -81,7 +158,7 @@ class Parser:
         condicao: Expressao = self.expressao()
         self.espera(TokenType.FECHA_PARENTESES, "Eu esperava ')' apos uma condicao.")
         
-        corpo: Declaracao = self.declaracao()
+        corpo: Optional[Declaracao] = self.declaracao()
         
         return While(condicao, corpo)
     
@@ -206,7 +283,29 @@ class Parser:
             direita = self.unaria()
             return Unaria(operador, direita)
         
-        return self.primaria()
+        return self.chamada()
+    
+    def chamada(self) -> Expressao:
+        expressao: Expressao = self.primaria()
+        
+        while(self.match(TokenType.ABRE_PARENTESES)):
+            expressao = self.finaliza_chamada(expressao)
+            
+        return expressao
+    
+    def finaliza_chamada(self, chamado: Expressao) -> Expressao:
+        argumentos = []
+        
+        if not self.check(TokenType.FECHA_PARENTESES):
+            while True:
+                argumentos.append(self.expressao())
+                
+                if not self.match(TokenType.VIRGULA):
+                    break
+        
+        paren: Token = self.espera(TokenType.FECHA_PARENTESES, "Eu esperava ')' depois dos argumentos.")
+        
+        return Chamada(chamado, paren, argumentos)
     
     def primaria(self) -> Expressao:
         if self.match(TokenType.BANDIDO): return Literal(False)

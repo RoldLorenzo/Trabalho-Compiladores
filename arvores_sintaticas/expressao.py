@@ -3,7 +3,7 @@ from lexer.lex_token import Token
 
 # Crafting Interpreters, Robert Nystrom - Cap. 5.
 
-tipo_literal = int | float | str | bool | None
+TipoLiteral = int | float | str | bool | None
 
 class Expressao:
     # Como essa eh uma classe abstrata, esse metodo nunca deve ser usado diretamente.
@@ -53,7 +53,7 @@ class Logica(Expressao):
         return self.coloca_parenteses(self.operador.lexema, self.esquerda, self.direita)
 
 class Literal(Expressao):
-    def __init__(self, valor: tipo_literal) -> None:
+    def __init__(self, valor: TipoLiteral) -> None:
         self.valor = valor
     
     def to_str(self) -> str:

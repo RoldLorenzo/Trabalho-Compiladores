@@ -53,6 +53,8 @@ class Lexer:
                 self.add_token(TokenType.ASTERISCO)
             case ';':
                 self.add_token(TokenType.PONTO_VIRGULA)
+            case ':':
+                self.add_token(TokenType.DOIS_PONTOS)
                 
             case '/':
                 # Ignorando a linha comentada

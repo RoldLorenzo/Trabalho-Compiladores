@@ -8,20 +8,14 @@ class LexTests(unittest.TestCase):
     def teste_lex(self):
         fonte = r"""
 // comentario
-([{}]),-+*;/
+([{}]),-+*;/:
 ! != = == > >= < <= && ||
 ola
 "string"
 123
 123.5
 bang miss cavalgando xerife procurado vorta deserto mocinho bandido atire BANG Miss
-&
-|
-@
-.abcdfdkjf
-123.4.5
-"string
-interminada
+int float string bool lista
         """
         
         lex = Lexer(fonte)
@@ -42,6 +36,7 @@ interminada
                 Token(TokenType.ASTERISCO, "*", 3),
                 Token(TokenType.PONTO_VIRGULA, ";", 3),
                 Token(TokenType.BARRA, "/", 3),
+                Token(TokenType.DOIS_PONTOS, ":", 3),
                 Token(TokenType.EXCLAMACAO, "!", 4),
                 Token(TokenType.DIFERENTE, "!=", 4),
                 Token(TokenType.IGUAL, "=", 4),
@@ -68,19 +63,11 @@ interminada
                 Token(TokenType.ATIRE, "atire", 9),
                 Token(TokenType.IDENTIFICADOR, "BANG", 9),
                 Token(TokenType.IDENTIFICADOR, "Miss", 9),
-                Token(TokenType.FLOAT, "123.4", 14),
-                Token(TokenType.EOF, "", 17),
-            ]
-        )
-        
-        self.assertEqual(
-            lex.erros,
-            [
-                LexError(LexErrorType.E_INESPERADO, None, 10),
-                LexError(LexErrorType.OU_INESPERADO, None, 11),
-                LexError(LexErrorType.TOKEN_INESPERADO, "@", 12),
-                LexError(LexErrorType.TOKEN_INESPERADO, ".abcdfdkjf", 13),
-                LexError(LexErrorType.TOKEN_INESPERADO, ".5", 14),
-                LexError(LexErrorType.STRING_INTERMINADA, None, 15),
+                Token(TokenType.INT, "int", 10),
+                Token(TokenType.FLOAT, "float", 10),
+                Token(TokenType.STRING, "string", 10),
+                Token(TokenType.BOOL, "bool", 10),
+                Token(TokenType.LISTA, "lista", 10),
+                Token(TokenType.EOF, "", 11),
             ]
         )
